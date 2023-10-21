@@ -1,0 +1,38 @@
+generator client {
+    provider             = "prisma-client-py"
+    interface            = "sync"
+    recursive_type_depth = "-1"
+}
+
+datasource db {
+    provider     = "mysql"
+    url          = env("DATABASE_URL")
+    relationMode = "prisma"
+}
+
+model User {
+    // Prisma syntax is field_name type followed by @modifiers like @id, @unique, @default, @updatedAt
+    // @id marks the field as the primary key
+    // @default(autoincrement()) marks the field as auto-incrementing, etc
+    id        Int      @id @default(autoincrement())
+    email     String   @unique
+    name      String?
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    // Relational fields -> One and only one user can create one/multiple posts
+    posts     Post[]
+}
+
+model Post {
+    id        Int      @id @default(autoincrement())
+    title     String
+    content   String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    // You can define onDelete behaviour for relational fields as well
+    // onDelete: Cascade means that if a user is deleted, all of their posts will be deleted as well
+    author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade) // A post is linked to a user
+    authorId  Int
+
+    @@index([authorId]) // Indexing the authorId field because PlanetScale doesn't support foreign keys
+}
